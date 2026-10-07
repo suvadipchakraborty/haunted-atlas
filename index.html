@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Haunted Atlas | Classified Paranormal Map</title>
+<meta name="description" content="Explore a classified, interactive database of the world's most paranormal, unexplained, and haunted locations.">
+<meta name="theme-color" content="#050505">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Haunted Atlas | Classified Paranormal Map">
+<meta property="og:description" content="Explore a classified, interactive database of the world's most paranormal, unexplained, and haunted locations.">
+<meta property="og:url" content="https://haunted-atlas.suvadipchakraborty.workers.dev/">
+<meta property="og:image" content="https://haunted-atlas.suvadipchakraborty.workers.dev/preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://haunted-atlas.suvadipchakraborty.workers.dev/preview.png">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar"><span class="blink">●</span> HAUNTED ATLAS <small id="count">LOADING FILES…</small></header>
+
+<main>
+  <section id="tab-atlas" class="tab active">
+    <div id="map"></div>
+    <div class="legend"><i class="dot red"></i> US Archives <i class="dot green"></i> Global</div>
+  </section>
+
+  <section id="tab-about" class="tab">
+    <div class="about">
+      <h1>HAUNTED ATLAS</h1>
+      <p class="stamp">TOP SECRET // EYES ONLY</p>
+      <p>Explore a classified, interactive database of the world's most paranormal, unexplained, and haunted locations.</p>
+      <h2>// FEATURES</h2>
+      <p>Dual-engine data fetching from a curated US database and the global Wikidata knowledge graph.</p>
+      <h2>// BENEFITS</h2>
+      <p>Discover local legends or explore famous international supernatural hotspots from a single interface.</p>
+      <h2>// CREDITS</h2>
+      <p>Built by Suva. Powered by open CSV data, Wikidata, and Wikipedia.</p>
+      <button id="installBtn" class="btn">⬇ INSTALL APP</button>
+      <p id="installNote" class="note"></p>
+    </div>
+  </section>
+</main>
+
+<div id="modal" class="modal" aria-hidden="true">
+  <div class="sheet" role="dialog" aria-labelledby="mTitle">
+    <div class="sheet-head">
+      <span>CASE FILE <b id="mTag"></b></span>
+      <div><button id="shareBtn" class="icon" aria-label="Share">⤴</button><button id="closeBtn" class="icon" aria-label="Close">✕</button></div>
+    </div>
+    <h2 id="mTitle"></h2>
+    <p class="coords" id="mCoords"></p>
+    <img id="mImg" alt="" hidden>
+    <p id="mText" class="narr"></p>
+  </div>
+</div>
+
+<nav class="bottom">
+  <button class="nav active" data-tab="atlas">🗺️<span>The Atlas</span></button>
+  <button class="nav" data-tab="about">ℹ️<span>About</span></button>
+</nav>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
