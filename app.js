@@ -11,11 +11,27 @@ const GHOST=c=>`<svg viewBox="0 0 24 24"><path d="M12 3C8 3 5.500 6 5.500 10v10l
 const icon=(cls,svg)=>L.divIcon({className:'',html:`<div class="pin ${cls}">${svg}</div>`,iconSize:[30,30],iconAnchor:[15,15]});
 const redIcon=icon('red',SKULL('#ff1a1a')), greenIcon=icon('green',GHOST('#00FF41'));
 
-const map=L.map('map',{worldCopyJump:true,zoomControl:false}).setView([39,-60],3);
+const map=L.map('map',{worldCopyJump:true,zoomControl:false,preferCanvas:true,zoomSnap:0.5,wheelPxPerZoomLevel:90,inertiaDeceleration:3400}).setView([39,-60],3);
 L.control.zoom({position:'topright'}).addTo(map);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd',attribution:'&copy; OpenStreetMap &copy; CARTO'}).addTo(map);
-const usLayer=L.layerGroup().addTo(map);
-const glLayer=L.layerGroup().addTo(map);
+// Free, key-less dark basemap (Esri Dark Gray) with labels; falls back to OSM (CSS-darkened) if tiles fail
+const tilePane=()=>map.getPane('tilePane');
+const esriBase=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',{maxZoom:16,maxNativeZoom:16,updateWhenIdle:true,keepBuffer:3,attribution:'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors'}).addTo(map);
+const esriLabels=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',{maxZoom:16,maxNativeZoom:16,updateWhenIdle:true,keepBuffer:3}).addTo(map);
+let fell=false,errs=0;
+esriBase.on('tileerror',()=>{
+  if(fell||++errs<4)return;fell=true;
+  map.removeLayer(esriBase);map.removeLayer(esriLabels);
+  tilePane().classList.add('osm-fallback');
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,updateWhenIdle:true,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
+});
+const clusterOpts=cls=>({
+  chunkedLoading:true,chunkInterval:100,chunkDelay:20,removeOutsideVisibleBounds:true,animate:false,
+  disableClusteringAtZoom:13,maxClusterRadius:55,spiderfyOnMaxZoom:true,showCoverageOnHover:false,
+  iconCreateFunction:c=>{const n=c.getChildCount(),sz=n<100?34:n<1000?42:50;
+    return L.divIcon({className:'',html:`<div class="cl ${cls}" style="width:${sz}px;height:${sz}px">${n}</div>`,iconSize:[sz,sz]});}
+});
+const usLayer=L.markerClusterGroup(clusterOpts('red')).addTo(map);
+const glLayer=L.markerClusterGroup(clusterOpts('green')).addTo(map);
 let total=0;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -25,6 +41,7 @@ function updateCount(){$('count').textContent=total+' FILES ON RECORD';}
 // ---- Source 1: US CSV
 function loadUS(){
   Papa.parse(CSV_URL,{download:true,header:true,skipEmptyLines:true,complete:({data})=>{
+    const batch=[];
     data.forEach(r=>{
       let lat=num(r.latitude),lng=num(r.longitude);
       if(lat===null||lng===null){lat=num(r.city_latitude);lng=num(r.city_longitude);} // fallback to city coords
@@ -33,9 +50,9 @@ function loadUS(){
       const place=[r.city,r.state||r.state_abbrev].filter(Boolean).join(', ');
       const m=L.marker([lat,lng],{icon:redIcon,title:name});
       m.on('click',()=>openCase({name,lat,lng,tag:'US',sub:place,text:(r.description||'').trim()||'No details have been declassified.'}));
-      m.addTo(usLayer);total++;
+      batch.push(m);total++;
     });
-    if(!map.hasLayer(usLayer))usLayer.addTo(map);
+    usLayer.addLayers(batch);
     updateCount();
   },error:()=>{$('count').textContent='US ARCHIVE OFFLINE';}});
 }
@@ -44,7 +61,7 @@ function loadUS(){
 async function loadGlobal(){
   try{
     const res=await fetch('https://query.wikidata.org/sparql?format=json&query='+encodeURIComponent(SPARQL),{headers:{Accept:'application/sparql-results+json'}});
-    const j=await res.json();const seen=new Set();
+    const j=await res.json();const seen=new Set();const batch=[];
     j.results.bindings.forEach(b=>{
       const mt=/Point\(([-\d.eE+]+) ([-\d.eE+]+)\)/.exec(b.coord.value);if(!mt)return;
       const lng=+mt[1],lat=+mt[2],title=b.wikiTitle.value;
@@ -52,8 +69,9 @@ async function loadGlobal(){
       const name=b.itemLabel?.value||title;
       const m=L.marker([lat,lng],{icon:greenIcon,title:name});
       m.on('click',()=>openCase({name,lat,lng,tag:'GLOBAL',wiki:title}));
-      m.addTo(glLayer);total++;
+      batch.push(m);total++;
     });
+    glLayer.addLayers(batch);
     updateCount();
   }catch(e){console.warn('Wikidata failed',e);}
 }

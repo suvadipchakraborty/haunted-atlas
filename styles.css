@@ -15,7 +15,12 @@ main{position:fixed;inset:0;bottom:calc(var(--nav) + env(safe-area-inset-bottom)
 .dot.red{background:var(--r);box-shadow:0 0 6px var(--r)}.dot.green{background:var(--g);box-shadow:0 0 6px var(--g)}
 .pin{width:30px;height:30px}
 .pin svg{width:30px;height:30px;overflow:visible}
-.pin.red svg{filter:drop-shadow(0 0 5px var(--r))}.pin.green svg{filter:drop-shadow(0 0 5px var(--g))}
+.pin{will-change:transform}
+.cl{display:flex;align-items:center;justify-content:center;border-radius:50%;font-weight:bold;font-size:12px;background:#050505dd;border:2px solid currentColor}
+.cl.red{color:var(--r);box-shadow:0 0 8px var(--r)}.cl.green{color:var(--g);box-shadow:0 0 8px var(--g)}
+.leaflet-marker-icon,.leaflet-marker-shadow{transition:none!important}
+.leaflet-tile-pane{filter:none}.leaflet-tile-pane.osm-fallback{filter:invert(1) hue-rotate(180deg) brightness(.8) contrast(.9)}
+#map{touch-action:none}
 .about{height:100%;overflow:auto;padding:calc(env(safe-area-inset-top) + 56px) 20px 24px;max-width:640px;margin:auto;line-height:1.6}
 .about h1{font-size:28px;letter-spacing:4px;text-shadow:0 0 12px var(--g)}
 .about h2{margin-top:20px;color:var(--r);font-size:15px;letter-spacing:2px}
